@@ -1,0 +1,29 @@
+{
+  "name": "playwright",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test:all": "npx playwright test",
+    "test:all:headed": "npx playwright test --headed",
+    "test:chromium": "npx playwright test --project chromium",
+    "test:firefox": "npx playwright test --project firefox",
+    "test:login": "npx playwright test --grep @login",
+    "test:!login": "npx playwright test --grep-invert @login",
+    "test:loginOrAuth": "npx playwright test --grep '@login|@auth'",
+    "mode:ui": "npx playwright test --ui",
+    "mode:trace": "npx playwright test --trace on",
+    "report": "npx playwright show-report",
+    "codegen": "npx playwright codegen"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.58.1",
+    "@types/node": "^25.6.0",
+    "eslint": "^10.2.1",
+    "typescript": "^5.9"
+  }
+}
