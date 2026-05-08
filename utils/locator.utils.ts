@@ -8,6 +8,13 @@ export async function getItemByTitle(items: Locator[], title: string): Promise<L
     return searchItem;
 }
 
+/**
+ * Searches for the first item in the provided array of Locators that matches the given title.
+ * 
+ * @param items - An array of Locator objects to search through.
+ * @param title - The title string to match against each item.
+ * @returns A Promise that resolves to the first matching Locator, or undefined if no match is found.
+ */
 async function searchForItem(items: Locator[], title: string): Promise<Locator | undefined> {
     for (const item of items) {
         if (await isItemHasTitle(item, title)) {

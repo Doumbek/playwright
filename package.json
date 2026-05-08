@@ -1,25 +1,19 @@
 {
-  "name": "playwright",
+  "name": "playwright-automation",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test:all": "npx playwright test",
-    "test:all:headed": "npx playwright test --headed",
-    "test:chromium": "npx playwright test --project chromium",
-    "test:firefox": "npx playwright test --project firefox",
-    "test:login": "npx playwright test --grep @login",
-    "test:!login": "npx playwright test --grep-invert @login",
-    "test:loginOrAuth": "npx playwright test --grep '@login|@auth'",
-    "mode:ui": "npx playwright test --ui",
-    "mode:trace": "npx playwright test --trace on",
-    "report": "npx playwright show-report",
-    "codegen": "npx playwright codegen"
-  },
-  "keywords": [],
-  "author": "",
+  "description": "Playwright test automation framework",
   "license": "ISC",
   "type": "commonjs",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:chromium": "playwright test --project chromium",
+    "test:grep": "playwright test --grep",
+    "test:mode:ui": "playwright test --ui",
+    "test:mode:trace": "playwright test --trace on",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen"
+  },
   "devDependencies": {
     "@playwright/test": "^1.58.1",
     "@types/node": "^25.6.0",

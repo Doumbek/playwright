@@ -1,10 +1,10 @@
-import { test, expect, Page, Locator } from "@playwright/test"
-import { LoginPage } from "../../src/ui/pages/login.page";
-import { AccountPage } from "../../src/ui/pages/account.page";
-import { HomePage } from "../../src/ui/pages/home.page";
-import { ProductPage } from "../../src/ui/pages/product.page";
-import { CheckoutPage } from "../../src/ui/pages/checkout.page";
-import { createUser } from "../../src/data/factory/user";
+import { test, expect} from "@playwright/test";
+import { LoginPage } from "@pages/login.page";
+import { AccountPage } from "@pages/account.page";
+import { HomePage } from "@pages/home.page";
+import { ProductPage } from "@pages/product.page";
+import { CheckoutPage } from "@pages/checkout.page";
+import { createUser } from "@data-factories/user";
 
 const userEmail = `test${Date.now()}@test.com`;
 const userPassword = "testTEST1@";
@@ -35,7 +35,6 @@ test.describe("During checkout user:", () => {
         const loginPage: LoginPage = new LoginPage(page);
         await loginPage.open();
         await loginPage.setEmail(userEmail);
-        await loginPage.setPassword(userPassword);
         await loginPage.clickSubmitButton();
 
         const accountPage: AccountPage = new AccountPage(page);

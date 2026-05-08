@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    // --- Strict mode ---
+    "strict": true,
+
+    // --- Module resolution ---
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    // --- Quality ---
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+
+    // --- Path aliases ---
+    "baseUrl": ".",
+    "paths": {
+      "@pages/*":          ["ui/pages/*"],
+      "@sections/*":       ["ui/sections/*"],
+      "@components/*":     ["ui/components/*"],
+      "@steps/*":          ["steps/*"],
+      "@fixtures/*":       ["fixtures/*"],
+      "@data-factories/*": ["data/factories/*"],
+      "@data-providers/*": ["data/providers/*"],
+      "@utils/*":          ["utils/*"]
+    }
+  },
+  "include": [
+    "tests/**/*",
+    "ui/**/*",
+    "steps/**/*",
+    "fixtures/**/*",
+    "data/**/*",
+    "utils/**/*",
+    "playwright.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "playwright-report",
+    "test-results"
+  ]
+}
