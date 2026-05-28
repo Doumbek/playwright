@@ -1,4 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
+import { initDotEnv, envConfig } from "@utils/config.utils";
+
+initDotEnv();
 
 export default defineConfig({
   testDir: "./tests",
@@ -18,7 +21,7 @@ export default defineConfig({
 
   // --- Shared browser options ---
   use: {
-    baseURL: "https://practicesoftwaretesting.com",
+    baseURL: envConfig.baseUrl,
     testIdAttribute: "data-test",
 
     // Timeouts

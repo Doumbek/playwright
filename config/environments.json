@@ -1,0 +1,10 @@
+{
+    "dev": {
+        "baseUrl": "https://practicesoftwaretesting.com",
+        "apiUrl": "https://api.practicesoftwaretesting.com"
+    },
+    "stage": {
+        "baseUrl": "https://practicesoftwaretesting.com",
+        "apiUrl": "https://api.practicesoftwaretesting.com"
+    }
+}

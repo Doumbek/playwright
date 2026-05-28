@@ -23,19 +23,28 @@ project-root/
 │   ├── copilot-instructions.md
 │   └── instructions/
 │       └── playwright.instructions.md
-├── data/                  # Playwright test data
+├── api/
+│   ├── api.client.ts      # ApiClient — typed wrapper around APIRequestContext
+│   ├── endpoints.ts       # API path constants (as const)
+│   ├── http.status.ts     # HttpStatus const object + exported type
+│   └── types/             # Response and request payload interfaces
+├── config/                # Environment config files
+│   ├── environments.json  # Environment-specific URLs and settings
+│   ├── .env.dev           # Local dev secrets (gitignored)
+│   └── .env.stage         # Stage secrets (gitignored)
+├── data/                  # Test data
 │   ├── factories/         # Dynamic data generation
 │   └── providers/         # Static data objects
 ├── fixtures/              # Playwright fixtures
 ├── steps/
-│   ├── actions/           # business action steps
-│   └── verifications/     # assertion steps
-├── tests/                 # test files only — no logic here
+│   ├── actions/           # Business action steps
+│   └── verifications/     # Assertion steps
+├── tests/                 # Test files only — no logic here
 ├── ui/
 │   ├── pages/             # Page Object classes
 │   ├── sections/          # Section classes (independent, reusable)
 │   └── components/        # Component classes (owned by Pages)
-├── utils/                 # shared helpers, types, constants
+├── utils/                 # Shared helpers, types, constants
 ├── playwright.config.ts
 └── tsconfig.json
 ```
@@ -43,6 +52,7 @@ project-root/
 **Directory conventions:**
 - Dot prefix → tooling directories (`.github`)
 - Flat layout — no `src/` wrapper (matches Node/Playwright community convention)
+- `config/` holds environment files and settings — separate from framework code
 
 ---
 
@@ -53,20 +63,20 @@ Tests
   └── Steps (Actions + Verifications)
         └── Pages / Sections
               └── Components
-                    └── Locators (private — never exposed above owner)
+                    └── Locators (public getters — used by Verifications via expect())
 ```
 
 > **Pages and Sections are independent and parallel concepts — not a hierarchy.**
 > Sections do NOT extend AbstractPage and are NOT mounted on it.
 > A Section is like a Page without a URL — independent, takes `Page` in constructor,
 > owns its locator root, usable from any context.
-> A Component is owned by a Page — scoped, dumb, never independent.
+> A Component is owned by a Page — scoped, instantiated by the Page that contains it.
 
 **Rules — never violate these:**
 1. Each layer calls only one level down — never skip layers
-2. Locators are always `private` — public interface is methods (behaviour), never elements
-3. Actions/Verifications layers orchestrate — Pages/Sections only expose atomic methods
-4. Pages/Sections own Components (complex area as wrapper for Locators) or Locators directly
+2. Locators are public getters — used by Verifications layer via `expect(locator)` only
+3. Actions layer never accesses locators directly — only through public Page/Section methods
+4. Pages/Sections own Components — Components expose methods, never raw locators to Actions
 
 ---
 
@@ -74,40 +84,93 @@ Tests
 
 ### Pages (`ui/pages/`)
 - Represent a full page with a URL
-- Instantiate Components with scoped locators
 - Extend AbstractPage
-- Expose public methods — never expose locators or component instances directly
+- Instantiate Components with scoped locators via factory methods
+- Expose public locator getters — consumed by Verifications layer only
+- Expose public action methods — consumed by Actions layer
+- Page methods that purely delegate to a component with no added logic should be removed
+- Actions layer accesses component methods directly through the Page's component getter
+- Keep Page methods only when they add real orchestration value beyond simple delegation
 
 ### Sections (`ui/sections/`)
 - Independent — instantiated with `Page` directly, not tied to any specific Page class
-- Think of a Section as a Page without a URL — same independence, smaller scope
-- Own their locator root
+- A Section is a Page without a URL — same independence, smaller scope
+- Own their locator root as `private readonly root: Locator`
 - Do NOT extend AbstractPage — they are not part of the Page hierarchy
-- Examples: `NavigationSection`, `FooterSection`
+- Expose public locator getters — consumed by Verifications layer only
+- Expose public action methods — consumed by Actions layer
+- Examples: `NavigationSection`, `FooterSection`, `AlertSection`
 
 ### Components (`ui/components/`)
 - Owned by Pages — instantiated by the Page that contains them
-- Receive a scoped `Locator` from their parent Page
-- Dumb — locators + atomic methods only, no orchestration
+- Receive a scoped `Locator` from their parent Page in constructor
+- Expose `self` getter — returns root Locator for component-level assertions
+- Expose public locator getters — consumed by Verifications layer only
+- Expose public action methods — consumed through Page's component getter
+- Dumb — no orchestration, no multi-page awareness
 - Never accessed directly from the Actions layer
-- Examples: `ProductCardComponent`, `SearchResultComponent`
+- Examples: `ProductCardComponent`, `CheckoutCartComponent`
 
 ### Steps — Actions (`steps/actions/`)
 - Orchestrate business flows using Pages and Sections
-- Might include complex one-method flows for precondition setup (e.g. `CheckoutFlow`)
+- Receive Pages or Sections via constructor — never instantiate them internally
+- Never access locators directly — only call public Page/Section action methods
+- May include complex flows for precondition setup only (e.g. `CheckoutFlow`)
 - Business steps that tests care about stay visible at test layer — never hidden in flows
-- Section-based Actions (e.g. `FooterActions`): receive Section as constructor param
-- Components: accessed only through Page's public methods, never directly
+- Method names describe business behaviour, not UI interactions
 
 ### Steps — Verifications (`steps/verifications/`)
 - Assertion-focused counterpart to Actions
-- Same layer rules apply — use Page/Section methods, never locators
+- Receive Pages or Sections via constructor — same pattern as Actions
+- Use public locator getters from Pages/Sections/Components to pass into `expect()`
+- Never call action methods — read state only
+- All assertions use Playwright's `expect()` — never raw boolean checks
+- Method names start with `verify`
 
-### AbstractPage (`ui/pages/AbstractPage.ts`)
-- Holds only universal page behaviour: `open()`, `waitForNetworkIdle()`, etc.
-- Never use component on abstract layer
+### AbstractPage (`ui/pages/abstract.page.ts`)
+- Holds only universal page behaviour
+- Exposes `protected goto(path)` — used by subclass `open()` methods
+- Exposes `protected waitForURL(url)` — used by subclass `open()` methods
+- Never holds locators or component references
 - Sections do NOT extend or relate to AbstractPage — they are independent
 - All Page classes extend AbstractPage
+
+---
+
+## API Layer Architecture
+
+```
+Tests / ApiActions
+  └── ApiClient (public endpoint methods)
+        └── Private infrastructure (parseAs<T>, checkResponseStatus)
+              └── Private transport (get, post, put, delete)
+```
+
+**ApiClient rules — never violate these:**
+1. Transport methods are private — never called from outside the class
+2. Sugar methods wrap raw methods with typed defaults — never duplicate transport calls
+3. `<T>` generics only on infrastructure and raw methods — sugar methods have specific return types
+4. baseURL lives on APIRequestContext, not on ApiClient — set at context creation in fixtures
+5. Request payload types are separate from response types — never share interfaces across boundary
+
+**Layer responsibilities:**
+
+### ApiClient (`api/api.client.ts`)
+- Wraps `APIRequestContext` via `ClientOptions` constructor injection
+- Three internal layers: private transport / private infrastructure / public endpoint methods
+- Sugar methods: typed params, sensible status defaults, specific return types
+- Raw (`As`) methods: `body: unknown`, caller controls `HttpStatus` and return type `<T>`
+- No orchestration — one HTTP call per method
+
+### ApiActions (`steps/actions/api.actions.ts`)
+- Orchestrates multi-step API flows (register + getCurrentUser → User)
+- Receives `ApiClient` via constructor — never instantiates it internally
+- Returns meaningful objects to tests and factories
+
+### Data Providers (`data/providers/`)
+- Static default payloads for API requests
+- No HTTP calls — pure data objects
+- Used by ApiActions and tests as defaults with spread overrides
 
 ---
 
@@ -116,19 +179,26 @@ Tests
 ### TypeScript
 - Always use strict mode — no `any`, no implicit types
 - Prefer `interface` for object shapes, `type` for unions and aliases
-- All async methods must be explicitly typed with return type
-- All locators are `private get` getters — Pages, Sections, and Components unified
-- Constructor parameters are always explicitly declared as `private readonly` fields and assigned in constructor body — never use TypeScript shorthand `constructor(private readonly x)`
+- All async methods must be explicitly typed with explicit return type
+- All locators are `public get` getters — unified across Pages, Sections, Components
+- Locator getters used by Actions layer is a codestyle violation — getters are for Verifications only
+- Constructor parameters are always explicitly declared as fields and assigned in constructor body
+- Never use TypeScript shorthand `constructor(private readonly x)` — always explicit declaration + assignment
+- `public` keyword used explicitly on all public members — intentional style decision for visual clarity
+- Sugar/raw naming convention for API endpoint methods — getProducts() / getProductsAs<T>(status)
+- Generic <T> only where method genuinely works for any type — not on business-specific sugar methods
+- HttpStatus const object used for all status code references — never magic numbers
+- void async methods use await internally, not return a raw Promise — ensures proper error handling and stack traces
 
 ### Playwright
 - Prefer semantic locators: `getByRole()`, `getByLabel()`, `getByTestId()`
-- Avoid CSS selectors and XPath unless absolutely necessary
+- Avoid CSS selectors and XPath unless no semantic alternative exists — add a comment explaining why
 - Never use `page.waitForTimeout()` — use proper waiting strategies
 - Never hardcode timeouts inline — use config or named constants
 - Always `await` Playwright actions — missing await is the #1 source of flakiness
 
 ### General
-- No magic strings — use constants, union types or enums
+- No magic strings — use constants, union types, or enums
 - No copy-paste setup in tests — use fixtures
 - Every public method has a clear, behaviour-describing name
 - Comments explain *why*, not *what*
@@ -140,11 +210,11 @@ Tests
 | Element | Convention | Example |
 |---|---|---|
 | Page classes | `PascalCase` + `Page` suffix | `LoginPage`, `SearchPage` |
-| Section classes | `PascalCase` + `Section` suffix | `NavigationSection` |
+| Section classes | `PascalCase` + `Section` suffix | `NavigationSection`, `AlertSection` |
 | Component classes | `PascalCase` + `Component` suffix | `ProductCardComponent` |
 | Action classes | `PascalCase` + `Actions` suffix | `LoginActions`, `FooterActions` |
 | Verification classes | `PascalCase` + `Verifications` suffix | `LoginVerifications` |
-| Locator properties | `private get`, camelCase | `private get submitButton(): Locator` |
+| Locator getters | `public get`, camelCase, explicit return type | `public get submitButton(): Locator` |
 | Constructor fields | `private readonly`, camelCase | `private readonly loginPage: LoginPage` |
 | Test files | `kebab-case.spec.ts` | `login.spec.ts` |
 | Fixture files | `kebab-case.fixture.ts` | `auth.fixture.ts` |
@@ -152,11 +222,17 @@ Tests
 ---
 
 ## What Copilot Should Never Suggest
-- Public locator properties on any class
-- Locators defined inside methods instead of as private getters
+- Locators defined inside methods — always define as getters
 - `page.waitForTimeout()` for waiting
-- CSS selectors when a semantic alternative exists
+- CSS selectors or XPath when a semantic alternative exists
 - Logic or assertions directly inside test files
+- Actions layer accessing locator getters directly — locators passed to `expect()` only
 - Direct access to Component instances from Actions layer
 - `any` type without explicit justification
 - Sections extending AbstractPage or being mounted on it
+- TypeScript constructor shorthand `constructor(private readonly x)` — always explicit
+- Magic number HTTP status codes — always use HttpStatus constants
+- baseURL stored on ApiClient — it belongs on APIRequestContext at context creation
+- Shared interfaces for request payloads and response types — always separate
+- Generic <T> on sugar methods — they have specific return types
+- Transport methods called from outside ApiClient — they are always private

@@ -1,35 +1,43 @@
+import { AbstractPage } from "@pages/abstract.page";
 import { Locator, Page } from "@playwright/test";
 
-export class LoginPage {
 
-    readonly url: string = "/auth/login"
-    readonly page: Page;
-    readonly emailInput: Locator;
-    readonly passwordInput: Locator;
-    readonly submitButton: Locator;
+export class LoginPage extends AbstractPage {
 
-    constructor(page: Page) {
-        this.page = page;
-        this.emailInput = page.getByPlaceholder("Your email");
-        this.passwordInput = page.getByPlaceholder("Your password");
-        this.submitButton = page.getByTestId("login-submit");
+    public constructor(page: Page) {
+        super(page);
     }
 
-    async open() {
-        await this.page.goto(this.url);
+    public async open(): Promise<void> {
+        await this.goto(this.getPath())
+        await this.waitForURL('**/auth/login');
     }
 
-    async setEmail(email: string) {
+    private getPath(): string {
+        return "/auth/login";
+    }
+
+    public get emailInput(): Locator {
+        return this.page.getByPlaceholder("Your email");
+    }
+
+    public get passwordInput(): Locator {
+        return this.page.getByPlaceholder("Your password");
+    }
+
+    public get submitButton(): Locator {
+        return this.page.getByTestId("login-submit");
+    }
+
+    public async setEmail(email: string): Promise<void> {
         await this.emailInput.fill(email);
     }
 
-    async setPassword(password: string) {
+    public async setPassword(password: string): Promise<void> {
         await this.passwordInput.fill(password);
     }
 
-    async clickSubmitButton() {
+    public async clickSubmitButton(): Promise<void> {
         await this.submitButton.click();
     }
-
 }
-

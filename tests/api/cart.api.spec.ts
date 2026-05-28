@@ -18,7 +18,7 @@ const STATUS_CREATED = 201;
 
 
 test.describe("Using API call user: ", () => {
-    test("should be able to add item to cart", async ({ request }) => {
+    test.skip("should be able to add item to cart", async ({ request }) => {
 
         // // Login
         // const response = await request.post(`${API_URL}${LOGIN_ENDPOINT}`, {

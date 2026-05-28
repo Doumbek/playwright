@@ -24,7 +24,10 @@
       "@fixtures/*":       ["fixtures/*"],
       "@data-factories/*": ["data/factories/*"],
       "@data-providers/*": ["data/providers/*"],
-      "@utils/*":          ["utils/*"]
+      "@utils/*":          ["utils/*"],
+      "@config/*":         ["config/*"],
+      "@api/*":            ["api/*"],
+      "@api-types/*":      ["api/types/*"],
     }
   },
   "include": [
@@ -34,6 +37,7 @@
     "fixtures/**/*",
     "data/**/*",
     "utils/**/*",
+    "api/**/*",
     "playwright.config.ts"
   ],
   "exclude": [

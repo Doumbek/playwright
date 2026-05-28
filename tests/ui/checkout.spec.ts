@@ -1,10 +1,16 @@
-import { test, expect} from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { LoginPage } from "@pages/login.page";
 import { AccountPage } from "@pages/account.page";
 import { HomePage } from "@pages/home.page";
 import { ProductPage } from "@pages/product.page";
 import { CheckoutPage } from "@pages/checkout.page";
 import { createUser } from "@data-factories/user";
+import { NavigationSection } from "@sections/navigation.section";
+import { AlertSection } from "@sections/alert.section";
+import { CheckoutCartComponent } from "@components/checkout.cart.component";
+import { CheckoutPaymentComponent } from "@components/checkout.payment.component";
+import { CheckoutAddressComponent } from "@components/checkout.address.component";
+import { CheckoutSignInComponent } from "@components/checkout.signin.component";
 
 const userEmail = `test${Date.now()}@test.com`;
 const userPassword = "testTEST1@";
@@ -44,41 +50,51 @@ test.describe("During checkout user:", () => {
         await homePage.open();
         await homePage.setSearchQuery(query);
         await homePage.clickSearchButton();
-        await expect(homePage.searchResultComponent).toBeVisible();
-        await expect(homePage.getItemByTitle(itemTitle)).toBeVisible();
+        await expect(homePage.searchResult).toBeVisible();
+        await expect(homePage.getProductCardByTitle(itemTitle).self).toBeVisible();
 
-        await homePage.clickItem(itemTitle);
+        await homePage.getProductCardByTitle(itemTitle).click();
 
         const productPage: ProductPage = new ProductPage(page);
         await productPage.clickAddToCartButton();
-        await expect(productPage.alert).toHaveText(expectedAddToCartAlert);
-        await expect(productPage.cartQty).toHaveText(expectedCartQty);
 
-        await productPage.clickCartIcon();
+        const navigationSection: NavigationSection = new NavigationSection(page);
+        const alertSection: AlertSection = new AlertSection(page);
+        await expect(alertSection.alert).toHaveText(expectedAddToCartAlert);
+        await expect(navigationSection.cartQty).toHaveText(expectedCartQty);
+
+        await navigationSection.clickCartIcon();
 
         const checkoutPage: CheckoutPage = new CheckoutPage(page);
-        await expect(checkoutPage.cartTotal).toHaveText(expectedCartTotal)
+        await checkoutPage.waitUntilOpened();
 
-        await checkoutPage.clickProcceedSignInButton();
-        await expect(checkoutPage.signInMessage).toHaveText(expectedSignInCheckoutMessage);
+        const checkoutCartComponent: CheckoutCartComponent = checkoutPage.getCheckoutCartComponent();
+        await expect(checkoutCartComponent.cartTotal).toHaveText(expectedCartTotal)
+        await checkoutCartComponent.clickProceedToCheckoutButton();
 
-        await checkoutPage.clickProceedToBillingAddress();
-        await expect(checkoutPage.proceedToPaymentButton).toBeVisible();
+        const checkoutSignInComponent: CheckoutSignInComponent = checkoutPage.getCheckoutSignInComponent();
+        await expect(checkoutSignInComponent.signInMessage).toHaveText(expectedSignInCheckoutMessage);
+        await checkoutSignInComponent.clickProceedToCheckoutButton();
 
-        await checkoutPage.setBillingAddressStreet(billingAddress.street);
-        await checkoutPage.setBillingAddressCity(billingAddress.city);
-        await checkoutPage.setBillingAddressState(billingAddress.state);
-        await checkoutPage.setBillingAddressCountry(billingAddress.country);
-        await checkoutPage.setBillingAddressPostalCode(billingAddress.postalCode);
-        await checkoutPage.clickProceedToPaymentButton();
-        await expect(checkoutPage.paymentMethod).toBeVisible();
+        const checkoutAddressComponent: CheckoutAddressComponent = checkoutPage.getCheckoutAddressComponent();
+        await expect(checkoutAddressComponent.self).toBeVisible();
+        await checkoutAddressComponent.setCountry(billingAddress.country);
+        await checkoutAddressComponent.setPostalCode(billingAddress.postalCode);
+        await checkoutAddressComponent.setStreet(billingAddress.street);
+        await checkoutAddressComponent.setCity(billingAddress.city);
+        await checkoutAddressComponent.setState(billingAddress.state);
+        await checkoutAddressComponent.clickProceedToCheckoutButton();
 
-        await checkoutPage.setPaymentMethod(paymentMethod);
-        await checkoutPage.clickPaymentConfirmButton();
+        const checkoutPaymentComponent: CheckoutPaymentComponent = checkoutPage.getCheckoutPaymentComponent();
+        await expect(checkoutPaymentComponent.paymentMethod).toBeVisible();
+        await checkoutPaymentComponent.setPaymentMethod(paymentMethod);
+        await checkoutPaymentComponent.clickConfirmButton();
 
-        await expect(checkoutPage.paymentSuccessMessage).toHaveText(expectedPaymentSuccessAlerrt);
+        await expect(checkoutPaymentComponent.successMessage).toHaveText(expectedPaymentSuccessAlerrt);
 
+        // Confirm order on UI
         // Verify invoices
+        // Confirm in the backend (API call or DB check)
 
     })
 })

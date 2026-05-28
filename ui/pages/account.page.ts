@@ -1,15 +1,13 @@
+import { AbstractPage } from "@pages/abstract.page";
 import { Page } from "@playwright/test";
 
-export class AccountPage {
+export class AccountPage extends AbstractPage {
 
-    readonly url: string = "/account"
-    readonly page: Page;
-
-    constructor(page: Page) {
-        this.page = page;
+    public constructor(page: Page) {
+        super(page);
     }
 
-    async waitUntilOpened() {
-        await this.page.waitForURL(url => url.pathname.endsWith(this.url));
+    public async waitUntilOpened(): Promise<void> {
+        await this.waitForURL("**/account");
     }
 }

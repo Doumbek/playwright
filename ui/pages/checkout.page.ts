@@ -1,78 +1,33 @@
-import { Locator, Page } from "@playwright/test";
+import { CheckoutAddressComponent } from "@components/checkout.address.component";
+import { CheckoutCartComponent } from "@components/checkout.cart.component";
+import { CheckoutPaymentComponent } from "@components/checkout.payment.component";
+import { CheckoutSignInComponent } from "@components/checkout.signin.component";
+import { AbstractPage } from "@pages/abstract.page";
+import { Page } from "@playwright/test";
 
-export class CheckoutPage {
+export class CheckoutPage extends AbstractPage {
 
-    readonly url: string = "/checkout"
-    readonly page: Page;
-    readonly cartTotal: Locator;
-    readonly proceedToSignInButton: Locator;
-    readonly proceedToBillingAddressButton: Locator;
-    readonly proceedToPaymentButton: Locator;
-    readonly signInMessage: Locator;
-    readonly billingAddressStreet: Locator;
-    readonly billingAddressCity: Locator;
-    readonly billingAddressState: Locator;
-    readonly billingAddressCountry: Locator;
-    readonly billingAddressPostalCode: Locator;
-    readonly paymentMethod: Locator;
-    readonly paymentConfirmButton: Locator;
-    readonly paymentSuccessMessage: Locator;
-
-    constructor(page: Page) {
-        this.page = page;
-        this.cartTotal = page.getByTestId("cart-total");
-        this.proceedToSignInButton = page.getByTestId("proceed-1");
-        this.proceedToBillingAddressButton = page.getByTestId("proceed-2");
-        this.proceedToPaymentButton = page.getByTestId("proceed-3");
-        this.signInMessage = page.locator("xpath=//app-login//p");
-        this.billingAddressStreet = page.getByTestId("street");
-        this.billingAddressCity = page.getByTestId("city");
-        this.billingAddressState = page.getByTestId("state");
-        this.billingAddressCountry = page.getByTestId("country");
-        this.billingAddressPostalCode = page.getByTestId("postal_code");
-        this.billingAddressPostalCode = page.getByTestId("postal_code");
-        this.paymentMethod = page.getByTestId("payment-method");
-        this.paymentConfirmButton = page.getByTestId("finish");
-        this.paymentSuccessMessage = page.getByTestId("payment-success-message");
+    public constructor(page: Page) {
+        super(page);
     }
 
-    async clickProcceedSignInButton() {
-        await this.proceedToSignInButton.click();
+    public async waitUntilOpened(): Promise<void> {
+        await this.waitForURL("**/checkout");
     }
 
-    async clickProceedToBillingAddress() {
-        await this.proceedToBillingAddressButton.click();
+    public getCheckoutCartComponent(): CheckoutCartComponent {
+        return new CheckoutCartComponent(this.page.locator("xpath=//app-cart"));
     }
 
-    async clickProceedToPaymentButton() {
-        await this.proceedToPaymentButton.click();
+    public getCheckoutSignInComponent(): CheckoutSignInComponent {
+        return new CheckoutSignInComponent(this.page.locator("xpath=//app-login"));
     }
 
-    async setBillingAddressStreet(street: string) {
-        await this.billingAddressStreet.fill(street);
+    public getCheckoutAddressComponent(): CheckoutAddressComponent {
+        return new CheckoutAddressComponent(this.page.locator("xpath=//app-address"));
     }
 
-    async setBillingAddressCity(city: string) {
-        await this.billingAddressCity.fill(city);
-    }
-
-    async setBillingAddressState(state: string) {
-        await this.billingAddressState.fill(state);
-    }
-
-    async setBillingAddressCountry(country: string) {
-        await this.billingAddressCountry.fill(country);
-    }
-
-    async setBillingAddressPostalCode(postalCode: string) {
-        await this.billingAddressPostalCode.fill(postalCode);
-    }
-
-    async setPaymentMethod(paymentMethod: string) {
-        await this.paymentMethod.selectOption(paymentMethod);
-    }
-
-    async clickPaymentConfirmButton() {
-        await this.paymentConfirmButton.click();
+    public getCheckoutPaymentComponent(): CheckoutPaymentComponent {
+        return new CheckoutPaymentComponent(this.page.locator("xpath=//app-payment"));
     }
 }

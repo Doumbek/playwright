@@ -1,39 +1,55 @@
 import { Locator, Page } from "@playwright/test";
+import { AbstractPage } from "@pages/abstract.page";
+import { ProductCardComponent } from "@components/product.card.component";
 
-export class HomePage {
+export class HomePage extends AbstractPage {
 
-    readonly url: string = "/"
-    readonly page: Page;
-    readonly searchInput: Locator;
-    readonly searchButton: Locator;
-    readonly searchResultComponent: Locator;
-    readonly searchResultItems: Locator;
-
-    constructor(page: Page) {
-        this.page = page;
-        this.searchInput = page.getByPlaceholder("Search");
-        this.searchButton = page.getByTestId("search-submit");
-        this.searchResultComponent = page.getByTestId("search_completed");
-        this.searchResultItems = this.searchResultComponent.locator("xpath=//a[@class='card']");
+    public constructor(page: Page) {
+        super(page);
     }
 
-    async open() {
-        await this.page.goto(this.url);
+    public async open(): Promise<void> {
+        await this.goto(this.getPath())
+        await this.waitForURL('**/');
     }
 
-    async setSearchQuery(query: string) {
+    private getPath(): string {
+        return "/";
+    }
+
+    public get searchInput(): Locator {
+        return this.page.getByPlaceholder("Search products");
+    }
+    public get searchButton(): Locator {
+        return this.page.getByTestId("search-submit");
+    }
+
+    public get searchResult(): Locator {
+        return this.page.getByTestId("search_completed");
+    }
+
+    public get searchResultItems(): Locator {
+        return this.searchResult.locator("xpath=//a[@class='card']");
+    }
+
+    public async setSearchQuery(query: string): Promise<void> {
         await this.searchInput.fill(query);
     }
 
-    async clickSearchButton() {
+    public async clickSearchButton(): Promise<void> {
         await this.searchButton.click();
     }
 
-    getItemByTitle(title: string) {
-        return this.searchResultItems.filter({ hasText: title })
+    // all() resolves immediately — DOM access required, async
+    public async getAllProductCards(): Promise<ProductCardComponent[]> {
+        const locators = await this.searchResultItems.all();
+        return locators.map(root => new ProductCardComponent(root));
     }
 
-    async clickItem(title: string) {
-        await this.getItemByTitle(title).click()
+    // filter() stays lazy — no DOM access, synchronous
+    public getProductCardByTitle(title: string): ProductCardComponent {
+        return new ProductCardComponent(
+            this.searchResultItems.filter({ hasText: title })
+        );
     }
 }
