@@ -1,10 +1,8 @@
 import { APIRequestContext, APIResponse } from "@playwright/test";
-import { Product } from "@api-types/product.types";
-import { User } from "@api-types/user.types";
+import { Product, ProductData } from "@api-types/product.types";
+import { User, LoginUserData, RegisterUserData } from "@api-types/user.types";
 import { endpoints } from "@api/endpoints";
 import { HttpStatus } from "@api/http.status";
-import { LoginUserData, RegisterUserData } from "@data-providers/user.data";
-import { ProductData } from "@data-providers/product.data";
 
 export interface ClientOptions {
     context: APIRequestContext;

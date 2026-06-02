@@ -24,6 +24,8 @@
       "@fixtures/*":       ["fixtures/*"],
       "@data-factories/*": ["data/factories/*"],
       "@data-providers/*": ["data/providers/*"],
+      "@data-builders/*":  ["data/builders/*"],
+      "@data-types/*":     ["data/types/*"],
       "@utils/*":          ["utils/*"],
       "@config/*":         ["config/*"],
       "@api/*":            ["api/*"],
