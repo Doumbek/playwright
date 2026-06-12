@@ -17,7 +17,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
 
   // --- Reporting ---
-  reporter: [["list"], ["html", { open: "never" }]],
+  reporter: [["list", { printSteps: true }], ["html", { open: "never" }]],
 
   // --- Shared browser options ---
   use: {

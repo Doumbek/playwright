@@ -18,7 +18,7 @@ export class HomePage extends AbstractPage {
     }
 
     public get searchInput(): Locator {
-        return this.page.getByPlaceholder("Search products");
+        return this.page.getByTestId("search-query");
     }
     public get searchButton(): Locator {
         return this.page.getByTestId("search-submit");

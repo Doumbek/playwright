@@ -20,6 +20,11 @@ export class CheckoutAddressComponent {
         return this.root.getByTestId("postal_code");
     }
 
+    public get houseNumber(): Locator {
+        return this.root.getByTestId("house_number");
+    }
+
+
     public get street(): Locator {
         return this.root.getByTestId("street");
     }
@@ -37,11 +42,15 @@ export class CheckoutAddressComponent {
     }
 
     public async setCountry(country: string): Promise<void> {
-        await this.country.fill(country);
+        await this.country.selectOption(country);
     }
 
     public async setPostalCode(postalCode: string): Promise<void> {
         await this.postalCode.fill(postalCode);
+    }
+
+    public async setHouseNumber(houseNumber: string): Promise<void> {
+        await this.houseNumber.fill(houseNumber);
     }
 
     public async setStreet(street: string): Promise<void> {

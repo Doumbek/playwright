@@ -1,4 +1,5 @@
 import { RegisterUserData, LoginUserData } from "@api/types/user.types";
+import { BillingAddress } from "@api/types/address.types";
 
 export type CreateNewOrderCheckoutTestData = {
     registerUserData: RegisterUserData;
@@ -9,13 +10,7 @@ export type CreateNewOrderCheckoutTestData = {
     expectedCartQty: string;
     expectedCartTotal: string;
     expectedSignInCheckoutMessage: string;
-    billingAddress: {
-        street: string;
-        city: string;
-        state: string;
-        country: string;
-        postalCode: string;
-    };
+    billingAddress: BillingAddress;
     paymentMethod: string;
-    expectedPaymentSuccessAlert: string;
+    expectedPaymentSuccessMessage: string;
 };

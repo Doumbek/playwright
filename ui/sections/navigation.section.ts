@@ -13,7 +13,7 @@ export class NavigationSection {
     }
 
     public get cart(): Locator {
-        return this.root.getByTestId("cart");
+        return this.root.getByTestId("nav-cart");
     }
 
     public async clickCartIcon(): Promise<void> {

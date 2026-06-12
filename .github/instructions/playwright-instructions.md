@@ -147,6 +147,7 @@ export class ProductCardComponent {
 ## Actions Rules
 
 ```typescript
+import { test } from '@playwright/test';
 import { LoginPage } from '@pages/login.page';
 
 export class LoginActions {
@@ -157,11 +158,15 @@ export class LoginActions {
     this.loginPage = loginPage;
   }
 
+  // TODO: try to refactor using TypeScript decorators for steps, e.g. @step("description")
+  // before method declaration, to avoid test.step() boilerplate in every method body
   public async loginAs(email: string, password: string): Promise<void> {
-    await this.loginPage.open();
-    await this.loginPage.setEmail(email);
-    await this.loginPage.setPassword(password);
-    await this.loginPage.clickSubmitButton();
+    await test.step(`LoginActions: loginAs [${email}]`, async () => {
+      await this.loginPage.open();
+      await this.loginPage.setEmail(email);
+      await this.loginPage.setPassword(password);
+      await this.loginPage.clickSubmitButton();
+    });
   }
 }
 ```
@@ -177,7 +182,9 @@ export class NavigationActions {
   }
 
   public async goToCart(): Promise<void> {
-    await this.navigation.clickCartIcon();
+    await test.step('NavigationActions: goToCart', async () => {
+      await this.navigation.clickCartIcon();
+    });
   }
 }
 ```
@@ -186,18 +193,28 @@ export class NavigationActions {
 // Actions that need multiple Pages — receive all as constructor params
 export class CheckoutActions {
 
-  private readonly homePage: HomePage;
   private readonly checkoutPage: CheckoutPage;
 
-  public constructor(homePage: HomePage, checkoutPage: CheckoutPage) {
-    this.homePage = homePage;
+  public constructor(checkoutPage: CheckoutPage) {
     this.checkoutPage = checkoutPage;
+  }
+
+  public async setBillingAddressAndProceedToCheckout(address: BillingAddress): Promise<void> {
+    await test.step(`CheckoutActions: Set billing address and proceed -> [${JSON.stringify(address)}]`, async () => {
+      const addressComponent = this.checkoutPage.getCheckoutAddressComponent();
+      await addressComponent.setCountry(address.country);
+      await addressComponent.setCity(address.city);
+      // ... remaining fields ...
+      await addressComponent.clickProceedToCheckoutButton();
+    });
   }
 }
 ```
 
 **Rules:**
 - Receives Page Objects or Sections via constructor — never instantiates them internally
+- Every public method body wrapped in `test.step()` — makes business steps visible in terminal and HTML report
+- Step name format: `ClassName: methodName [key diagnostic parameter]` — include the parameter that matters most for debugging
 - Never accesses locator getters — only calls public action methods on Pages/Sections
 - Components accessed through Page's component getter, never directly
 - Method names describe business behaviour, not UI interactions
@@ -207,7 +224,7 @@ export class CheckoutActions {
 ## Verifications Rules
 
 ```typescript
-import { expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { LoginPage } from '@pages/login.page';
 
 export class LoginVerifications {
@@ -218,18 +235,22 @@ export class LoginVerifications {
     this.loginPage = loginPage;
   }
 
-  // Uses public locator getter — passes Locator directly to expect()
   public async verifyEmailInputVisible(): Promise<void> {
-    await expect(this.loginPage.emailInput).toBeVisible();
+    await test.step('LoginVerifications: verifyEmailInputVisible', async () => {
+      await expect(this.loginPage.emailInput).toBeVisible();
+    });
   }
 
   public async verifyErrorMessage(message: string): Promise<void> {
-    await expect(this.loginPage.errorMessage).toHaveText(message);
+    await test.step(`LoginVerifications: verifyErrorMessage [${message}]`, async () => {
+      await expect(this.loginPage.errorMessage).toHaveText(message);
+    });
   }
 }
 ```
 
 **Rules:**
+- Every public method body wrapped in `test.step()` — same pattern as Actions
 - All assertions use Playwright's `expect()` — never raw boolean checks
 - Uses public locator getters from Pages/Sections/Components — passes to `expect()` directly
 - Never calls action methods — reads state only
@@ -381,12 +402,28 @@ export class ApiClient {
   }
 
   // ── Private transport ──────────────────────────────────────────
+  // Logs every HTTP call before executing — method + path + body
+  // Passwords log in plaintext — acceptable for practice site only
+  // On real projects: redact via helper or opt-out flag per endpoint method
+  // TODO: consider @step decorator when decorator support is added
   private async get(path: string): Promise<APIResponse> {
+    console.log(`[GET] ${path}`);
     return this.context.get(path);
   }
 
   private async post(path: string, body: unknown): Promise<APIResponse> {
+    console.log(`[POST] ${path} - body: ${JSON.stringify(body)}`);
     return this.context.post(path, { data: body });
+  }
+
+  private async put(path: string, body: unknown): Promise<APIResponse> {
+    console.log(`[PUT] ${path} - body: ${JSON.stringify(body)}`);
+    return this.context.put(path, { data: body });
+  }
+
+  private async delete(path: string): Promise<APIResponse> {
+    console.log(`[DELETE] ${path}`);
+    return this.context.delete(path);
   }
 
   // ── Private infrastructure ─────────────────────────────────────
@@ -418,13 +455,14 @@ export class ApiClient {
 **Rules:**
 - `ClientOptions` takes `context: APIRequestContext` only — `baseURL` set on context at creation
 - Three internal layers: transport (private) → infrastructure (private) → endpoint methods (public)
+- Transport methods log before executing: `console.log('[METHOD] path - body: ...')`
 - Sugar method: typed return, default status — zero boilerplate at call site
 - Raw (`As`) method: `<T>` generic return, caller controls `HttpStatus`
 - `body: unknown` on transport and raw methods — sugar methods use specific payload types
 - `parseAs<T>` uses `response.json() as T` — compile-time label, runtime parsing by Playwright
 - `checkResponseStatus` throws with status + URL — enough context to debug without a trace
 
---- 
+---
 
 **HttpStatus pattern:**
 ```typescript
@@ -469,4 +507,29 @@ export interface User {
   email: string;
 }
 // Never share these interfaces — they have different responsibilities and will diverge
+```
+
+---
+
+## Observability Pattern
+
+Two-level visibility — no extra tooling required:
+
+**Business level — test.step() in every Actions and Verifications method:**
+- Terminal shows which business step is executing (and which is hanging)
+- HTML report shows full step tree with timing
+- Step name format: `ClassName: methodName [key diagnostic parameter]`
+- Reporter config required: `['list', { printSteps: true }]`
+
+**Wire level — console.log in ApiClient transport methods:**
+- Every HTTP call logs method + path + body before executing
+- Placed in transport layer — single callsite, covers all endpoint methods automatically
+- Never in endpoint methods or ApiActions — those express intent, not wire detail
+
+```
+// Combined terminal output during a test run:
+CheckoutActions: Set billing address and proceed -> [{"country":"US",...}]
+  [POST] /auth/register - body: {"email":"user_123@test.com",...}
+  [GET] /auth/me
+CheckoutVerifications: Verify cart total has expected value -> [$19.99]
 ```

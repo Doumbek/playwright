@@ -33,8 +33,9 @@ project-root/
 │   ├── .env.dev           # Local dev secrets (gitignored)
 │   └── .env.stage         # Stage secrets (gitignored)
 ├── data/                  # Test data
-│   ├── factories/         # Dynamic data generation
-│   └── providers/         # Static data objects
+│   ├── builders/          # Object construction with Partial<T> overrides
+│   ├── providers/         # Test dataset functions per test scenario
+│   └── types/             # Test data shape interfaces
 ├── fixtures/              # Playwright fixtures
 ├── steps/
 │   ├── actions/           # Business action steps
@@ -115,6 +116,8 @@ Tests
 - Orchestrate business flows using Pages and Sections
 - Receive Pages or Sections via constructor — never instantiate them internally
 - Never access locators directly — only call public Page/Section action methods
+- Every public method body wrapped in `test.step()` — makes business steps visible in terminal and HTML report
+- Step name format: `ClassName: methodName [key diagnostic parameter]`
 - May include complex flows for precondition setup only (e.g. `CheckoutFlow`)
 - Business steps that tests care about stay visible at test layer — never hidden in flows
 - Method names describe business behaviour, not UI interactions
@@ -123,6 +126,8 @@ Tests
 - Assertion-focused counterpart to Actions
 - Receive Pages or Sections via constructor — same pattern as Actions
 - Use public locator getters from Pages/Sections/Components to pass into `expect()`
+- Every public method body wrapped in `test.step()` — same pattern as Actions
+- Step name format: `ClassName: methodName [key diagnostic parameter]`
 - Never call action methods — read state only
 - All assertions use Playwright's `expect()` — never raw boolean checks
 - Method names start with `verify`
@@ -158,6 +163,8 @@ Tests / ApiActions
 ### ApiClient (`api/api.client.ts`)
 - Wraps `APIRequestContext` via `ClientOptions` constructor injection
 - Three internal layers: private transport / private infrastructure / public endpoint methods
+- Transport methods log every HTTP call before executing: `console.log('[METHOD] path - body: ...')`
+- Logging lives in transport only — endpoint methods and ApiActions express intent, not wire detail
 - Sugar methods: typed params, sensible status defaults, specific return types
 - Raw (`As`) methods: `body: unknown`, caller controls `HttpStatus` and return type `<T>`
 - No orchestration — one HTTP call per method
@@ -165,12 +172,24 @@ Tests / ApiActions
 ### ApiActions (`steps/actions/api.actions.ts`)
 - Orchestrates multi-step API flows (register + getCurrentUser → User)
 - Receives `ApiClient` via constructor — never instantiates it internally
-- Returns meaningful objects to tests and factories
+- Returns meaningful objects to tests and builders
+
+### Data Builders (`data/builders/`)
+- Build request payload objects with sensible defaults
+- Accept Partial<T> overrides — caller specifies only what differs
+- No HTTP calls — pure construction logic
+- Example: buildRegisterUserData(overrides?)
 
 ### Data Providers (`data/providers/`)
-- Static default payloads for API requests
-- No HTTP calls — pure data objects
-- Used by ApiActions and tests as defaults with spread overrides
+- Exported as functions — never module-level constants (avoids caching)
+- Return typed test dataset arrays for specific test scenarios
+- Use builders internally, add test-specific expected values
+- Example: getCreateNewOrderCheckoutDataSet(): CreateNewOrderCheckoutTestData[]
+
+### Data Types (`data/types/`)
+- Test data shape interfaces — separate from API contract types in api/types/
+- Example: CreateNewOrderCheckoutTestData
+- Never share with api/types/ — different responsibilities, will diverge
 
 ---
 
@@ -236,3 +255,5 @@ Tests / ApiActions
 - Shared interfaces for request payloads and response types — always separate
 - Generic <T> on sugar methods — they have specific return types
 - Transport methods called from outside ApiClient — they are always private
+- Actions or Verifications methods without `test.step()` wrapping — every public method must be wrapped
+- `console.log` in endpoint methods or ApiActions — logging belongs in transport layer only
