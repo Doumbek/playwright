@@ -1,7 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 import { initDotEnv, envConfig } from "@utils/config.utils";
 
-initDotEnv();
+// Load environment variables from .env file only for local development.
+// Skip this step in CI to avoid potential issues with missing .env files and to allow CI to manage environment variables through its own mechanisms (e.g., GitHub Actions secrets, Jenkins credentials, etc.).
+if (!process.env.CI) {
+  initDotEnv();
+}
 
 export default defineConfig({
   testDir: "./tests",
