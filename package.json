@@ -5,7 +5,7 @@
   "license": "ISC",
   "type": "commonjs",
   "scripts": {
-    "playwright:setup": "playwright install --with-deps",
+    "playwright:setup": "playwright install chromium --with-deps",
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "test:chromium": "playwright test --project chromium",
