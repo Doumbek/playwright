@@ -5,6 +5,7 @@
   "license": "ISC",
   "type": "commonjs",
   "scripts": {
+    "playwright:setup": "playwright install --with-deps",
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "test:chromium": "playwright test --project chromium",
@@ -12,7 +13,8 @@
     "test:mode:ui": "playwright test --ui",
     "test:mode:trace": "playwright test --trace on",
     "report": "playwright show-report",
-    "codegen": "playwright codegen"
+    "codegen": "playwright codegen",
+    "lint": "eslint ."
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",
