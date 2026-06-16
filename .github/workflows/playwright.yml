@@ -19,6 +19,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint code
+        run: npm run eslint
+
       - name: Install Playwright browsers
         run: npm run playwright:setup
         timeout-minutes: 2

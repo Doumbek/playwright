@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
-import path from "path";
 import fs from "fs";
 import environments from "@config/environments.json";
+import { resolveEnvConfigPath } from '@utils/path.utils';
 
 export type Environment = keyof typeof environments;
 export type EnvironmentConfig = typeof environments[Environment];
@@ -19,7 +19,7 @@ const checkEnvIsValid = (env: string): void => {
 }
 
 const getDotEnvPath = (env: Environment): string => {
-    const dotEnvPath = path.resolve(process.cwd(), `./config/.env.${env}`)
+    const dotEnvPath = resolveEnvConfigPath(env)
     checkDotEnvFileExists(dotEnvPath);
     return dotEnvPath;
 }

@@ -14,13 +14,16 @@
     "test:mode:trace": "playwright test --trace on",
     "report": "playwright show-report",
     "codegen": "playwright codegen",
-    "lint": "eslint ."
+    "eslint": "eslint ."
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",
     "@types/node": "^25.6.0",
+    "@typescript-eslint/eslint-plugin": "^8.61.1",
+    "@typescript-eslint/parser": "^8.61.1",
     "dotenv": "^17.4.2",
     "eslint": "^10.2.1",
+    "eslint-plugin-playwright": "^2.10.4",
     "typescript": "^5.9"
   }
 }

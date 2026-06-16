@@ -29,23 +29,23 @@ test.describe("Using API call: ", () => {
 
             // Find products by query
             const productsSearchResult: ProductsSearchResult = await apiActions.searchProductsByQuery(dataSet.searchQuery);
-            apiVerifications.verifyProductSearchResultHasCorrectProductListSize(productsSearchResult, dataSet.expectedProductListSize);
+            await apiVerifications.verifyProductSearchResultHasCorrectProductListSize(productsSearchResult, dataSet.expectedProductListSize);
 
             // Verify Product has correct name
             const product: Product = await apiActions.getProductByNameFromProductSearchResult(dataSet.searchQuery, dataSet.productTitle);
-            apiVerifications.verifyProductHasCorrectName(product, dataSet.productTitle);
+            await apiVerifications.verifyProductHasCorrectName(product, dataSet.productTitle);
 
             // Add product to cart and verify response message
             const createdCart: Cart = await apiActions.createNewCart();
             const addToCartResponse = await apiActions.addProductToCart(createdCart.id, prepareAddToCartData(product.id, dataSet.quantity));
-            apiVerifications.verifyAddToCartResponseHasCorrectMessage(addToCartResponse, dataSet.expectedAddToCartMessage)
+            await apiVerifications.verifyAddToCartResponseHasCorrectMessage(addToCartResponse, dataSet.expectedAddToCartMessage)
 
             // Verify cart and cart items details
             const cart: Cart = await apiActions.getCartById(createdCart.id);
-            apiVerifications.verifyCartHasCorrectId(cart.id, createdCart.id);
+            await apiVerifications.verifyCartHasCorrectId(cart.id, createdCart.id);
             const actualCartItem = await apiActions.getCartItemForProduct(createdCart.id, product.id);
-            apiVerifications.verifyCartItemHasCorrectQuantity(actualCartItem, dataSet.quantity);
-            apiVerifications.verifyCartItemHasCorrectProductName(actualCartItem, dataSet.productTitle);
+            await apiVerifications.verifyCartItemHasCorrectQuantity(actualCartItem, dataSet.quantity);
+            await apiVerifications.verifyCartItemHasCorrectProductName(actualCartItem, dataSet.productTitle);
         });
     });
 });
