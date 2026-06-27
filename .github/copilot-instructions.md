@@ -203,7 +203,7 @@ Tests / ApiActions
 - Locator getters used by Actions layer is a codestyle violation — getters are for Verifications only
 - Constructor parameters are always explicitly declared as fields and assigned in constructor body
 - Never use TypeScript shorthand `constructor(private readonly x)` — always explicit declaration + assignment
-- `public` keyword used explicitly on all public members — intentional style decision for visual clarity
+- `public` keyword used explicitly on all public members — enforced by ESLint explicit-member-accessibility rule
 - Sugar/raw naming convention for API endpoint methods — getProducts() / getProductsAs<T>(status)
 - Generic <T> only where method genuinely works for any type — not on business-specific sugar methods
 - HttpStatus const object used for all status code references — never magic numbers
@@ -257,3 +257,4 @@ Tests / ApiActions
 - Transport methods called from outside ApiClient — they are always private
 - Actions or Verifications methods without `test.step()` wrapping — every public method must be wrapped
 - `console.log` in endpoint methods or ApiActions — logging belongs in transport layer only
+- Suppressing ESLint rules via eslint-disable comments without an explanation comment — always document why a rule is suppressed if it genuinely needs to be

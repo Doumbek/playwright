@@ -30,6 +30,7 @@
       "@config/*":         ["config/*"],
       "@api/*":            ["api/*"],
       "@api-types/*":      ["api/types/*"],
+      "@setup/*":          ["setup/*"],
     }
   },
   "include": [
@@ -40,6 +41,7 @@
     "data/**/*",
     "utils/**/*",
     "api/**/*",
+    "setup/**/*",
     "playwright.config.ts"
   ],
   "exclude": [

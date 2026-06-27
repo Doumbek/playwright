@@ -2,7 +2,7 @@ import { ApiClient } from "@api/api.client";
 import { AddToCartData, AddToCartResponse, Cart, CartItem } from "@api/types/carts.types";
 
 import { Product, ProductsSearchResult } from "@api/types/product.types";
-import { RegisterUserData } from "@api/types/user.types";
+import { LoginUserData, RegisterUserData } from "@api/types/user.types";
 import test from "@playwright/test";
 
 export class ApiActions {
@@ -16,6 +16,15 @@ export class ApiActions {
     public async registerUser(userData: RegisterUserData): Promise<void> {
         await test.step(`ApiActions: Register new user with data -> [${JSON.stringify(userData)}]`, async () => {
             await this.client.registerUser(userData);
+        })
+    }
+
+    //TODO: Return token as string or full LoginResponse
+    public async registerUserAndLogin(userData: RegisterUserData, loginData: LoginUserData): Promise<string> {
+        return await test.step(`ApiActions: Register and login new user with data -> [${JSON.stringify(userData)}]`, async () => {
+            await this.client.registerUser(userData);
+            const loginResponse = await this.client.loginUser(loginData);
+            return loginResponse.access_token;
         })
     }
 

@@ -1,6 +1,6 @@
 import { APIRequestContext, APIResponse } from "@playwright/test";
-import { Product, ProductData, ProductsSearchResult } from "@api-types/product.types";
-import { User, LoginUserData, RegisterUserData } from "@api-types/user.types";
+import { ProductsSearchResult } from "@api-types/product.types";
+import { User, LoginUserData, RegisterUserData, LoginResponse } from "@api-types/user.types";
 import { endpoints } from "@api/endpoints";
 import { HttpStatus } from "@api/http.status";
 import { AddToCartData, AddToCartResponse, Cart } from "@api/types/carts.types";
@@ -108,13 +108,14 @@ export class ApiClient {
         this.checkResponseStatus(response, expectedStatus);
     }
 
-    public async loginUser(body: LoginUserData): Promise<void> {
-        await this.loginUserAs(body, HttpStatus.OK);
+    public async loginUser(body: LoginUserData): Promise<LoginResponse> {
+        return this.loginUserAs<LoginResponse>(body, HttpStatus.OK);
     }
 
-    public async loginUserAs(body: unknown, expectedStatus: HttpStatus): Promise<void> {
+    public async loginUserAs<T>(body: unknown, expectedStatus: HttpStatus): Promise<T> {
         const response = await this.post(endpoints.login, body);
         this.checkResponseStatus(response, expectedStatus);
+        return this.parseAs<T>(response);
     }
 
     public async getCurrentUser(): Promise<User> {

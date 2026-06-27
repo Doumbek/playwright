@@ -9,8 +9,8 @@ import { NavigationSection } from "@sections/navigation.section";
 import { AlertSection } from "@sections/alert.section";
 import { ApiClient } from "@api/api.client";
 import { envConfig } from "@utils/config.utils";
-import { getCreateNewOrderCheckoutDataSet as getCreateNewOrderDataSet } from "@data-providers/checkout.provider";
-import { CreateNewOrderCheckoutTestData as CreateNewOrderTestData } from "@data-types/checkout.types";
+import { getCreateNewOrderUILoginDataSet, getCreateNewOrdeSessionStorageDataSet } from "@data-providers/checkout.provider";
+import { CreateNewOrderCheckoutTestData } from "@data-types/checkout.types";
 import { LoginActions } from "@steps/actions/login.actions";
 import { AccountActions } from "@steps/actions/account.actions";
 import { HomeActions } from "@steps/actions/home.actions";
@@ -21,6 +21,9 @@ import { HomeVerifications } from "@steps/verifications/home.verifications";
 import { AlertVerifications } from "@steps/verifications/alert.verifications";
 import { NavigationVerifications } from "@steps/verifications/navigation.verifications";
 import { CheckoutVerifications } from "@steps/verifications/checkout.verifications";
+import { SessionSetup } from "@setup/session.setup";
+
+let sessionSetup: SessionSetup;
 
 let client: ApiClient;
 let apiActions: ApiActions;
@@ -43,11 +46,13 @@ test.beforeAll("Setup data", async ({ browser }) => {
 
     basicPage = await browser.newPage();
 
+    sessionSetup = new SessionSetup(basicPage);
     client = new ApiClient({
         context: await request.newContext({
             baseURL: envConfig.apiUrl
         })
     });
+
     apiActions = new ApiActions(client);
     loginActions = new LoginActions(new LoginPage(basicPage));
     accountActions = new AccountActions(new AccountPage(basicPage));
@@ -61,18 +66,67 @@ test.beforeAll("Setup data", async ({ browser }) => {
     navigationVerifications = new NavigationVerifications(new NavigationSection(basicPage));
     checkoutVerifications = new CheckoutVerifications(new CheckoutPage(basicPage));
 
-
 })
 
 test.describe("During checkout:", () => {
-    getCreateNewOrderDataSet().forEach((dataSet: CreateNewOrderTestData) => {
-        test("0001. Registered user should be able to create new order", async () => {
+    getCreateNewOrderUILoginDataSet().forEach((dataSet: CreateNewOrderCheckoutTestData) => {
+        test("0001. Registered user should be able to create new order using UI login", async () => {
 
             await apiActions.registerUser(dataSet.registerUserData);
 
+            //TODO Session created during login through UI, we need to handle session after API registration and login to proceed with UI steps.
             await loginActions.navigateToLoginPage();
             await loginActions.login(dataSet.loginUserData);
             await accountActions.waitUntilAccountPageIsOpened();
+
+            await homeActions.navigateToHomePage();
+            await homeActions.searchForProductWithTile(dataSet.query);
+
+            await homePageVerifications.verifySearchResultIsShown();
+            await homePageVerifications.verifyProductCardWithTitleIsShown(dataSet.itemTitle);
+
+            await homeActions.clickProductWithTitle(dataSet.itemTitle);
+            await productActions.addCurrentProductToCart();
+
+            await alertVerifications.verifyAlertHasCorrectMessage(dataSet.expectedAddToCartAlert);
+            await navigationVerifications.verifyCartHasCorrectQuantityValue(dataSet.expectedCartQty);
+
+            await navigationActions.clickCartIcon();
+            await checkoutActions.waitUntilPageIsOpened();
+
+            await checkoutVerifications.verifyCartTotalHasCorrectValue(dataSet.expectedCartTotal);
+            await checkoutActions.proceedToCheckoutFromCart();
+
+            await checkoutVerifications.verifySignInMessageHasCorrectValue(dataSet.expectedSignInCheckoutMessage);
+            await checkoutActions.proceedToCheckoutFromSignIn();
+
+            await checkoutVerifications.verifyBillingAddressFormIsVisible();
+            await checkoutActions.setBillingAddressAndProceedToCheckout(dataSet.billingAddress);
+
+            await checkoutVerifications.verifyPaymentMethodSelectorIsVisible();
+            await checkoutActions.setPaymentMethodAndConfirm(dataSet.paymentMethod);
+
+            await checkoutVerifications.verifyPaymentSuccessMessageHasCorrectValue(dataSet.expectedPaymentSuccessMessage);
+
+            // Confirm order on UI
+            // Verify invoices
+            // Confirm in the backend (API call or DB check)
+
+        });
+    });
+
+    getCreateNewOrdeSessionStorageDataSet().forEach((dataSet: CreateNewOrderCheckoutTestData) => {
+        test("0002. Registered user should be able to create new order with setup storage", async () => {
+
+            const authToken = await apiActions.registerUserAndLogin(dataSet.registerUserData, dataSet.loginUserData);
+            await sessionSetup.setAuthToken(authToken);
+
+            // await apiActions.registerUser(dataSet.registerUserData);
+
+            //TODO Session created during login through UI, we need to handle session after API registration and login to proceed with UI steps.
+            // await loginActions.navigateToLoginPage();
+            // await loginActions.login(dataSet.loginUserData);
+            // await accountActions.waitUntilAccountPageIsOpened();
 
             await homeActions.navigateToHomePage();
             await homeActions.searchForProductWithTile(dataSet.query);
