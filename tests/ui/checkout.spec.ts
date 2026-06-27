@@ -71,6 +71,7 @@ test.beforeAll("Setup data", async ({ browser }) => {
 test.describe("During checkout:", () => {
     getCreateNewOrderUILoginDataSet().forEach((dataSet: CreateNewOrderCheckoutTestData) => {
         test("0001. Registered user should be able to create new order using UI login", async () => {
+            test.skip(!!process.env.CI, 'Captcha blocks all UI auth tests on CI');
 
             await apiActions.registerUser(dataSet.registerUserData);
 

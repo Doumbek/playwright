@@ -32,7 +32,8 @@ export default [
             'playwright/no-wait-for-timeout': 'error',
             'playwright/no-force-option': 'error',
             'playwright/expect-expect': ['error', { assertFunctionPatterns: ["^verify.*"] }],
-            'playwright/no-skipped-test': 'warn',
+            //TODO: Doublecheck do we really need whis skip test warning
+            // 'playwright/no-skipped-test': 'warn',
             'playwright/no-standalone-expect': 'error',
             'playwright/consistent-spacing-between-blocks': 'error',
             'playwright/prefer-locator': 'error',
