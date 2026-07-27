@@ -1,4 +1,4 @@
-import { AddToCartData } from "@api/types/carts.types";
+import { AddToCartData } from "@api/types/cart.types";
 
 export function prepareAddToCartData(productId: string, quantity: number): AddToCartData {
     return {

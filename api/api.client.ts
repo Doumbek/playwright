@@ -3,7 +3,7 @@ import { ProductsSearchResult } from "@api-types/product.types";
 import { User, LoginUserData, RegisterUserData, LoginResponse } from "@api-types/user.types";
 import { endpoints } from "@api/endpoints";
 import { HttpStatus } from "@api/http.status";
-import { AddToCartData, AddToCartResponse, Cart } from "@api/types/carts.types";
+import { AddToCartData, AddToCartResponse, Cart } from "@api/types/cart.types";
 
 export interface ClientOptions {
     context: APIRequestContext;

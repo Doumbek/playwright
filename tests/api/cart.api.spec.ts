@@ -1,5 +1,5 @@
 import { ApiClient } from "@api/api.client";
-import { Cart } from "@api/types/carts.types";
+import { Cart } from "@api/types/cart.types";
 import { Product, ProductsSearchResult } from "@api/types/product.types";
 import { test, request } from "@playwright/test"
 import { ApiActions } from "@steps/actions/api.actions";

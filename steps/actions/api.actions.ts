@@ -1,5 +1,5 @@
 import { ApiClient } from "@api/api.client";
-import { AddToCartData, AddToCartResponse, Cart, CartItem } from "@api/types/carts.types";
+import { AddToCartData, AddToCartResponse, Cart, CartItem } from "@api/types/cart.types";
 
 import { Product, ProductsSearchResult } from "@api/types/product.types";
 import { LoginUserData, RegisterUserData } from "@api/types/user.types";

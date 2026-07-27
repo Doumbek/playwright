@@ -1,4 +1,4 @@
-import { AddToCartResponse, CartItem } from "@api/types/carts.types";
+import { AddToCartResponse, CartItem } from "@api/types/cart.types";
 import { Product, ProductsSearchResult } from "@api/types/product.types";
 import test, { expect } from "@playwright/test";
 
